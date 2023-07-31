@@ -10,7 +10,7 @@ class FilterNode : FilterNode.IReadable, FilterNode.IReader
 
     public interface IReadable
     {
-        byte[] Read();
+        System.Drawing.Bitmap Read();
     }
 
     public interface IReader
@@ -50,7 +50,7 @@ class FilterNode : FilterNode.IReadable, FilterNode.IReader
         return this;
     }
 
-    public byte[] Read()
+    public System.Drawing.Bitmap Read()
     {
         if (input == null)
         {

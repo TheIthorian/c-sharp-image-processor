@@ -1,3 +1,5 @@
+using System.Drawing;
+
 class ImageReader : FilterNode.IReadable
 {
     private readonly string filePath;
@@ -7,8 +9,8 @@ class ImageReader : FilterNode.IReadable
         this.filePath = filePath;
     }
 
-    public byte[] Read()
+    public Bitmap Read()
     {
-        return File.ReadAllBytes(filePath);
+        return (Bitmap)Bitmap.FromFile(filePath);
     }
 }

@@ -1,3 +1,5 @@
+using System.Drawing.Imaging;
+
 class ImageWriter : FilterNode.IReader
 {
     private readonly string filePath;
@@ -27,8 +29,7 @@ class ImageWriter : FilterNode.IReader
             throw new AppException("Unable to write to file: No input provided");
         }
 
-        using FileStream fs = File.Open(filePath, FileMode.OpenOrCreate);
-        byte[] buffer = input.Read();
-        fs.Write(buffer);
+        var buffer = input.Read();
+        buffer.Save(filePath, ImageFormat.Jpeg);
     }
 }
