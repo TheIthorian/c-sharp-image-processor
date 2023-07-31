@@ -1,8 +1,7 @@
-﻿Console.WriteLine("Hello, World!");
+﻿Console.WriteLine("Processing image...");
 
 foreach (string arg in args)
 {
-    Console.WriteLine(arg);
 }
 // ExampleProcessor.Run();
 
@@ -16,3 +15,5 @@ var writer = new ImageWriter("../output.jpg");
 writer.ConnectInput(invertFilterNode);
 
 writer.Write();
+
+Console.WriteLine("Done!");
