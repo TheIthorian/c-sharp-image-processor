@@ -1,12 +1,18 @@
+using System.Drawing;
+
 class InvertFilter : IFilter
 {
     public InvertFilter() { }
 
-    public void Process(byte[] buffer)
+    public void Process(Bitmap buffer)
     {
-        for (int i = 0; i < buffer.Length; i++)
+        for (int y = 0; y < buffer.Height; y++)
         {
-            buffer[i] = (byte)(255 - buffer[i]);
+            for (int x = 0; x < buffer.Width; x++)
+            {
+                var color = buffer.GetPixel(x, y);
+                buffer.SetPixel(x, y, Color.FromArgb(255 - color.R, 255 - color.G, 255 - color.B, color.A));
+            }
         }
     }
 }
