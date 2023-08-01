@@ -11,9 +11,10 @@ public static class ImageProcessor
                 Color pixelColor = bitmap.GetPixel(x, y);
 
                 var newPixelColor = Color.FromArgb(
-                255 - pixelColor.R,
-                255 - pixelColor.G,
-                255 - pixelColor.B);
+                    255 - pixelColor.R,
+                    255 - pixelColor.G,
+                    255 - pixelColor.B
+                );
 
                 // Set the pixel in the modified image
                 bitmap.SetPixel(x, y, newPixelColor);
