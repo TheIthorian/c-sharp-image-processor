@@ -10,12 +10,17 @@ class Program
 
         var imageReader = new ImageReader("../image.jpg");
 
-        var invertFilter = FilterFactory.FromString("InvertFilter");
+        var invertFilter = FilterFactory.From(FilterFactory.Filter.Invert);
         var invertFilterNode = new FilterNode(invertFilter);
         invertFilterNode.ConnectInput(imageReader);
 
+        var mirrorFilter = FilterFactory.From(FilterFactory.Filter.Mirror);
+
+        var mirrorFilterNode = new FilterNode(mirrorFilter);
+        mirrorFilterNode.ConnectInput(invertFilterNode);
+
         var writer = new ImageWriter("../output.jpg");
-        writer.ConnectInput(invertFilterNode);
+        writer.ConnectInput(mirrorFilterNode);
 
         writer.Write();
 
