@@ -1,5 +1,6 @@
 using System.Drawing.Imaging;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class ImageWriter : FilterNode.IReader
 {
     private readonly string filePath;

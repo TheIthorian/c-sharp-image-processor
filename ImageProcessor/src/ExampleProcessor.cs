@@ -1,18 +1,16 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public static class ExampleProcessor
 {
     public static void Run()
     {
         // Load an existing image
-        Bitmap originalImage = new Bitmap("../image.jpg");
-
-        // Create a new bitmap with the same dimensions
-        Bitmap modifiedImage = new Bitmap(originalImage.Width, originalImage.Height);
+        var originalImage = new Bitmap("../image.jpg");
 
         // Process each pixel and invert the colors
-        ImageProcessor.ProcessPixels(originalImage, modifiedImage);
+        ImageProcessor.ProcessPixels(originalImage);
 
         // Save the modified image to a new file
         originalImage.Save("../output.jpg", ImageFormat.Jpeg);

@@ -1,8 +1,9 @@
 using System.Drawing;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public static class ImageProcessor
 {
-    public static void ProcessPixels(Bitmap bitmap, Bitmap modifiedImage)
+    public static void ProcessPixels(Bitmap bitmap)
     {
         for (int y = 0; y < bitmap.Height; y++)
         {
