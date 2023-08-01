@@ -11,7 +11,7 @@ class InvertFilter : IFilter
             for (int x = 0; x < buffer.Width; x++)
             {
                 var color = buffer.GetPixel(x, y);
-                buffer.SetPixel(x, y, Color.FromArgb(255 - color.R, 255 - color.G, 255 - color.B, color.A));
+                buffer.SetPixel(x, y, Color.FromArgb(color.A, 255 - color.R, 255 - color.G, 255 - color.B));
             }
         }
     }
