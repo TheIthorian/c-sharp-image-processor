@@ -1,3 +1,4 @@
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class FilterFactory
 {
     public enum FILTER
