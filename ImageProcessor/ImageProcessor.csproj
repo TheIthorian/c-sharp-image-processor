@@ -11,6 +11,4 @@
         <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     </ItemGroup>
 
-    <TargetFramework>net7.0-windows</TargetFramework>
-
 </Project>
