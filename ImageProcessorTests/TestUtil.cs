@@ -3,7 +3,7 @@ using System.Drawing.Imaging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-class TestUtil
+static class TestUtil
 {
     public static Bitmap MakeImage(int width, int height)
     {
