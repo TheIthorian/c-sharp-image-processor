@@ -31,12 +31,11 @@ class ImageWriter : FilterNode.IReader
         return this;
     }
 
-    public void Write()
+    public void Write(bool deduceOutputFormat = false)
     {
-        if (input == null)
-        {
-            throw new AppExceptions.NoInputConnected("Unable to write image to file: No input connected.");
-        }
+        if (input == null) throw new AppExceptions.NoInputConnected("Unable to write image to file: No input connected.");
+
+        if (deduceOutputFormat) outputFormat = GetImageFormat(filePath.Split('.').Last());
 
         var buffer = input.Read();
         buffer.Save(filePath, outputFormat);
@@ -46,7 +45,7 @@ class ImageWriter : FilterNode.IReader
     {
         return outputFormat switch
         {
-            "jpeg" => ImageFormat.Jpeg,
+            "jpg" => ImageFormat.Jpeg,
             "png" => ImageFormat.Png,
             "bmp" => ImageFormat.Bmp,
             _ => ImageFormat.Jpeg,

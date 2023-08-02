@@ -1,4 +1,4 @@
-[System.Runtime.Versioning.SupportedOSPlatform("windows")]
+﻿[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class Program
 {
     public static void Main(string[] args)
@@ -11,12 +11,10 @@ class Program
 
         var imageReader = new ImageReader(inputFilePath);
 
-        var invertFilter = FilterFactory.From(FilterFactory.Filter.Invert);
-        var invertFilterNode = new FilterNode(invertFilter);
+        var invertFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Invert);
         invertFilterNode.ConnectInput(imageReader);
 
-        var mirrorFilter = FilterFactory.From(FilterFactory.Filter.Mirror);
-        var mirrorFilterNode = new FilterNode(mirrorFilter);
+        var mirrorFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Mirror);
         mirrorFilterNode.ConnectInput(invertFilterNode);
 
         var writer = new ImageWriter(outputFilePath);
