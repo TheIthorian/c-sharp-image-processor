@@ -32,3 +32,15 @@ The `input_file_path` and `output_file_path` arguments are optional.
 
 -   `input_file_path` defaults to the first file found in the directory.
 -   `output_file_path` defaults to `'./output.jpg'`
+
+## Adding Packages
+
+```sh
+dotnet add package <packagename> --source https://api.nuget.org/v3/index.json
+```
+
+## Run Tests
+
+```sh
+dotnet test ImageProcessorTests/ImageProcessorTests.csproj
+```
