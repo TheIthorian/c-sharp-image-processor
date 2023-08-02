@@ -1,4 +1,4 @@
-﻿[System.Runtime.Versioning.SupportedOSPlatform("windows")]
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class Program
 {
     public static void Main(string[] args)
@@ -35,7 +35,6 @@ class Program
 
     private static string FindFirstImageInCurrentDirectory()
     {
-        // Find the first image in the directory
         var files = Directory.GetFiles(Directory.GetCurrentDirectory());
         var inputFilePath = files.FirstOrDefault(file => file.EndsWith(".jpg") || file.EndsWith(".png"));
 
