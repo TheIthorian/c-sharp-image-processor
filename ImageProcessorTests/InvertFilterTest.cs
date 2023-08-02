@@ -1,4 +1,3 @@
-using System.Drawing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ImageProcessorNS;
 
