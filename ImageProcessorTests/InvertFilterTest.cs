@@ -3,6 +3,7 @@ using ImageProcessorNS;
 
 namespace ImageProcessorTests;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 [TestClass]
 public class InvertFilterTest
 {
