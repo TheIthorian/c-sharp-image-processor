@@ -20,10 +20,10 @@ class Program
         var writer = new ImageWriter(outputFilePath);
         writer.ConnectInput(mirrorFilterNode);
 
-        writer.Write();
+        var elapsedMilliseconds = writer.Write();
 
-        Console.WriteLine("Done!");
-        Console.WriteLine("Output image saved to " + outputFilePath);
+        Console.WriteLine("Done! Image processed in " + elapsedMilliseconds + "ms.");
+        Console.WriteLine("Output image saved to " + outputFilePath + '\n');
     }
 
     private static string GetInputFilePathFromArgs(string[] args)
@@ -46,6 +46,6 @@ class Program
 
     private static string GetOutputFilePathFromArgs(string[] args)
     {
-        return args.Length < 2 ? "output.jpg" : args[1];
+        return args.Length < 2 ? Path.Combine(Directory.GetCurrentDirectory(), "output.jpg") : args[1];
     }
 }
