@@ -42,5 +42,5 @@ dotnet add package <packagename> --source https://api.nuget.org/v3/index.json
 ## Run Tests
 
 ```sh
-dotnet test ImageProcessorTests/ImageProcessorTests.csproj
+dotnet test
 ```
