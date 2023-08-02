@@ -31,14 +31,20 @@ class ImageWriter : FilterNode.IReader
         return this;
     }
 
-    public void Write(bool deduceOutputFormat = false)
+    public long Write(bool deduceOutputFormat = false)
     {
         if (input == null) throw new AppExceptions.NoInputConnected("Unable to write image to file: No input connected.");
 
         if (deduceOutputFormat) outputFormat = GetImageFormat(filePath.Split('.').Last());
 
+        var stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
         var buffer = input.Read();
         buffer.Save(filePath, outputFormat);
+
+        stopwatch.Stop();
+        return stopwatch.ElapsedMilliseconds;
     }
 
     private static ImageFormat GetImageFormat(string outputFormat)
