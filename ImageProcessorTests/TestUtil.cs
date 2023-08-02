@@ -41,16 +41,22 @@ class TestUtil
         }
     }
 
+    public static string GetAssetsPath()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../assets");
+    }
+
     public static void SaveImage(Bitmap image, string testName)
     {
-        image.Save(
-            $"C:/Programming/Misc_Sites/c-sharp-image-processor/ImageProcessorTests/assets/{testName}.png",
-            ImageFormat.Png
-        );
+        // use path relative to project root
+        var path = Path.Combine(GetAssetsPath(), testName + ".png");
+        image.Save(path, ImageFormat.Png);
     }
 
     public static Bitmap LoadImage(string testName)
     {
-        return (Bitmap)Image.FromFile($"C:/Programming/Misc_Sites/c-sharp-image-processor/ImageProcessorTests/assets/{testName}.png");
+        var path = Path.Combine(GetAssetsPath(), testName + ".png");
+        Console.WriteLine(path);
+        return (Bitmap)Image.FromFile(path);
     }
 }
