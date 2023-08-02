@@ -54,7 +54,7 @@ class FilterNode : FilterNode.IReadable, FilterNode.IReader
     {
         if (input == null)
         {
-            throw new AppException("Unable to read from input: Input not defined");
+            throw new AppExceptions.NoInputFileProvided("Unable to read from input: Input not defined");
         }
 
         var imageData = input.Read();

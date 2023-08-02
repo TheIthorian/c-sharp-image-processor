@@ -32,4 +32,9 @@ class FilterFactory
         Filter filter = (Filter)Enum.Parse(typeof(Filter), filterName);
         return From(filter);
     }
+
+    public static FilterNode FilterNodeFrom(Filter filter)
+    {
+        return new FilterNode(From(filter));
+    }
 }

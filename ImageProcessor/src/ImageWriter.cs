@@ -4,7 +4,9 @@ using System.Drawing.Imaging;
 class ImageWriter : FilterNode.IReader
 {
     private readonly string filePath;
+    private ImageFormat outputFormat = ImageFormat.Jpeg;
     private FilterNode.IReadable? input;
+
 
     public ImageWriter(string filePath)
     {
@@ -19,7 +21,13 @@ class ImageWriter : FilterNode.IReader
 
     public FilterNode.IReader DisconnectInput()
     {
-        this.input = null;
+        input = null;
+        return this;
+    }
+
+    public ImageWriter OutputFormat(string outputFormat)
+    {
+        this.outputFormat = GetImageFormat(outputFormat);
         return this;
     }
 
@@ -27,10 +35,21 @@ class ImageWriter : FilterNode.IReader
     {
         if (input == null)
         {
-            throw new AppException("Unable to write to file: No input provided");
+            throw new AppExceptions.NoInputConnected("Unable to write image to file: No input connected.");
         }
 
         var buffer = input.Read();
-        buffer.Save(filePath, ImageFormat.Jpeg);
+        buffer.Save(filePath, outputFormat);
+    }
+
+    private static ImageFormat GetImageFormat(string outputFormat)
+    {
+        return outputFormat switch
+        {
+            "jpeg" => ImageFormat.Jpeg,
+            "png" => ImageFormat.Png,
+            "bmp" => ImageFormat.Bmp,
+            _ => ImageFormat.Jpeg,
+        };
     }
 }
