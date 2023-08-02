@@ -1,4 +1,4 @@
-class FilterNode : FilterNode.IReadable, FilterNode.IReader
+public class FilterNode : FilterNode.IReadable, FilterNode.IReader
 {
     public IReadable? input;
     public FilterNode? output;

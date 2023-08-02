@@ -1,5 +1,6 @@
 using System.Drawing;
 
+
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class MirrorFilter : IFilter
 {

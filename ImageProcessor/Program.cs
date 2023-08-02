@@ -1,4 +1,6 @@
-﻿[System.Runtime.Versioning.SupportedOSPlatform("windows")]
+﻿using ImageProcessorNS;
+
+[System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class Program
 {
     public static void Main(string[] args)

@@ -1,4 +1,4 @@
-interface IFilter
+public interface IFilter
 {
     void Process(System.Drawing.Bitmap buffer) { }
 }

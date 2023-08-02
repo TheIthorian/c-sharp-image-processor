@@ -1,5 +1,8 @@
+namespace ImageProcessorNS;
+
+
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-class FilterFactory
+public class FilterFactory
 {
     public enum Filter
     {
