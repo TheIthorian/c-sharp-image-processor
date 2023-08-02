@@ -48,7 +48,6 @@ class TestUtil
 
     public static void SaveImage(Bitmap image, string testName)
     {
-        // use path relative to project root
         var path = Path.Combine(GetAssetsPath(), testName + ".png");
         image.Save(path, ImageFormat.Png);
     }
