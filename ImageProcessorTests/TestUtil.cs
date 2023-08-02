@@ -12,9 +12,9 @@ static class TestUtil
 
     public static void Fill(Bitmap image, int r = 255, int g = 255, int b = 255, int a = 255)
     {
-        for (int x = 1; x < image.Width; x++)
+        for (int x = 0; x < image.Width; x++)
         {
-            for (int y = 1; y < image.Height; y++)
+            for (int y = 0; y < image.Height; y++)
             {
                 image.SetPixel(x, y, Color.FromArgb(a, r, g, b));
             }
@@ -23,13 +23,12 @@ static class TestUtil
 
     public static void AssertEqual(Bitmap image1, Bitmap image2)
     {
-
         Assert.AreEqual(image1.Width, image2.Width);
         Assert.AreEqual(image1.Height, image2.Height);
 
-        for (int x = 1; x < image1.Width; x++)
+        for (int x = 0; x < image1.Width; x++)
         {
-            for (int y = 1; y < image1.Height; y++)
+            for (int y = 0; y < image1.Height; y++)
             {
                 var color1 = image1.GetPixel(x, y);
                 var color2 = image2.GetPixel(x, y);
@@ -58,5 +57,10 @@ static class TestUtil
         var path = Path.Combine(GetAssetsPath(), testName + ".png");
         Console.WriteLine(path);
         return (Bitmap)Image.FromFile(path);
+    }
+
+    public static Bitmap LoadStandardImage()
+    {
+        return LoadImage("standardImage");
     }
 }
