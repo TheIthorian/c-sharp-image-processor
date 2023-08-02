@@ -6,7 +6,7 @@ class Program
         string inputFilePath = GetInputFilePathFromArgs(args);
         string outputFilePath = GetOutputFilePathFromArgs(args);
 
-        Console.WriteLine($"Reading image from {inputFilePath}");
+        Console.WriteLine($"\nReading image from {inputFilePath}");
         Console.WriteLine("Processing image...");
 
         var imageReader = new ImageReader(inputFilePath);
