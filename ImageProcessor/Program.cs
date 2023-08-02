@@ -8,7 +8,7 @@ class Program
 
         foreach (string arg in args) { }
 
-        var imageReader = new ImageReader("../image.jpg");
+        var imageReader = new ImageReader("./image.jpg");
 
         var invertFilter = FilterFactory.From(FilterFactory.Filter.Invert);
         var invertFilterNode = new FilterNode(invertFilter);
@@ -19,7 +19,7 @@ class Program
         var mirrorFilterNode = new FilterNode(mirrorFilter);
         mirrorFilterNode.ConnectInput(invertFilterNode);
 
-        var writer = new ImageWriter("../output.jpg");
+        var writer = new ImageWriter("./output.jpg");
         writer.ConnectInput(mirrorFilterNode);
 
         writer.Write();
