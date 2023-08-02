@@ -20,6 +20,5 @@ public class InvertFilterTest
             testImage,
             TestUtil.LoadImage("InvertFilterTest.TestInvertsImageColorsResult")
         );
-
     }
 }
