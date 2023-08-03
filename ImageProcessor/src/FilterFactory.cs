@@ -27,6 +27,7 @@ public class FilterFactory
             Filter.Invert => new InvertFilter(),
             Filter.Mirror => new MirrorFilter(),
             Filter.Gray_Scale => new GrayscaleFilter(),
+            Filter.Black_And_White => new BlackAndWhiteFilter(),
             _ => throw new Exception("Unsupported filter: " + filter.ToString()),
         };
     }
