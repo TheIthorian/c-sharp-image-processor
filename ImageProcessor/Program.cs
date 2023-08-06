@@ -12,20 +12,36 @@ class Program
         Console.WriteLine("Processing image...");
 
         var imageReader = new ImageReader(inputFilePath);
-
-        var invertFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Invert);
-        invertFilterNode.ConnectInput(imageReader);
-
-        var mirrorFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Mirror);
-        mirrorFilterNode.ConnectInput(invertFilterNode);
+        var outputNode = EdgeDetection(imageReader);
 
         var writer = new ImageWriter(outputFilePath);
-        writer.ConnectInput(mirrorFilterNode);
-
+        writer.ConnectInput(outputNode);
         var elapsedMilliseconds = writer.Write();
 
         Console.WriteLine("Done! Image processed in " + elapsedMilliseconds + "ms.");
         Console.WriteLine("Output image saved to " + outputFilePath + '\n');
+    }
+
+    private static FilterNode EdgeDetection(FilterNode.IReadable reader)
+    {
+        var blackAndWhiteFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Black_And_White);
+        blackAndWhiteFilterNode.ConnectInput(reader);
+
+        var sobelFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Sobel);
+        sobelFilterNode.ConnectInput(blackAndWhiteFilterNode);
+
+        return sobelFilterNode;
+    }
+
+    private static FilterNode InvertMirror(FilterNode.IReadable reader)
+    {
+        var invertFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Invert);
+        invertFilterNode.ConnectInput(reader);
+
+        var mirrorFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Mirror);
+        mirrorFilterNode.ConnectInput(invertFilterNode);
+
+        return mirrorFilterNode;
     }
 
     private static string GetInputFilePathFromArgs(string[] args)
