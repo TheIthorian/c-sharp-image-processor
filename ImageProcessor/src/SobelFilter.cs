@@ -28,15 +28,13 @@ class SobelFilter : IFilter
                 // An alternative is to take the geometric mean:
                 // float resultingFactor = (float)Math.Sqrt(verticalFactor * verticalFactor + horizontalFactor * horizontalFactor);
 
-                // Clamp max value.
-                if (sobelFactor > 1) sobelFactor = 1;
-
                 var color = buffer.GetPixel(x, y);
-                var r = (int)(sobelFactor * color.R);
-                var g = (int)(sobelFactor * color.G);
-                var b = (int)(sobelFactor * color.B);
-
-                var newColor = Color.FromArgb(color.A, r, g, b);
+                var newColor = Color.FromArgb(
+                    color.A,
+                    Math.Min((int)(sobelFactor * color.R), 255),
+                    Math.Min((int)(sobelFactor * color.G), 255),
+                    Math.Min((int)(sobelFactor * color.B), 255)
+                );
 
                 buffer.SetPixel(x, y, newColor);
             }
