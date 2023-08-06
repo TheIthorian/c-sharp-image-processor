@@ -25,8 +25,8 @@ class SobelFilter : IFilter
                 float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
 
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
-                // An alternative is to take the geometric mean:
-                // float resultingFactor = (float)Math.Sqrt(verticalFactor * verticalFactor + horizontalFactor * horizontalFactor);
+                // An alternative is to take the geometric mean, which increases the contract in edges:
+                // float sobelFactor = (float)Math.Sqrt(verticalFactor * verticalFactor + horizontalFactor * horizontalFactor);
 
                 var color = buffer.GetPixel(x, y);
                 var newColor = Color.FromArgb(
