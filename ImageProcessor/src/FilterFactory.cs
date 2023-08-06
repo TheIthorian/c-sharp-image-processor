@@ -28,6 +28,7 @@ public class FilterFactory
             Filter.Mirror => new MirrorFilter(),
             Filter.Gray_Scale => new GrayscaleFilter(),
             Filter.Black_And_White => new BlackAndWhiteFilter(),
+            Filter.Sobel => new SobelFilter(),
             _ => throw new Exception("Unsupported filter: " + filter.ToString()),
         };
     }
