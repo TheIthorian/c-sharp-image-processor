@@ -46,15 +46,15 @@ static class TestUtil
         return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../assets");
     }
 
-    public static void SaveImage(Bitmap image, string testName)
+    public static void SaveImage(Bitmap image, string testName, string ext = "png")
     {
-        var path = Path.Combine(GetAssetsPath(), testName + ".png");
+        var path = Path.Combine(GetAssetsPath(), testName + "." + ext);
         image.Save(path, ImageFormat.Png);
     }
 
-    public static Bitmap LoadImage(string testName)
+    public static Bitmap LoadImage(string testName, string ext = "png")
     {
-        var path = Path.Combine(GetAssetsPath(), testName + ".png");
+        var path = Path.Combine(GetAssetsPath(), testName + "." + ext);
         Console.WriteLine(path);
         return (Bitmap)Image.FromFile(path);
     }
