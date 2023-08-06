@@ -15,11 +15,9 @@ public class BackAndWhiteFilterTest
         var invertFilter = FilterFactory.From(FilterFactory.Filter.Black_And_White);
         invertFilter.Process(testImage);
 
-        TestUtil.SaveImage(testImage, "BackAndWhiteFilterTest.TestConvertImageToBlackAndWhite");
-
-        // TestUtil.AssertEqual(
-        //     testImage,
-        //     TestUtil.LoadImage("BackAndWhiteFilterTest.TestConvertImageToBlackAndWhite")
-        // );
+        TestUtil.AssertEqual(
+            testImage,
+            TestUtil.LoadImage("BackAndWhiteFilterTest.TestConvertImageToBlackAndWhite")
+        );
     }
 }
