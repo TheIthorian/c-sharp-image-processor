@@ -3,23 +3,29 @@
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class Program
 {
+
+    private static readonly FileLogger logger = new();
+
     public static void Main(string[] args)
     {
         string inputFilePath = GetInputFilePathFromArgs(args);
         string outputFilePath = GetOutputFilePathFromArgs(args);
 
-        Console.WriteLine($"\nReading image from {inputFilePath}");
-        Console.WriteLine("Processing image...");
+        logger.WriteLine($"\nReading image from {inputFilePath}");
+        logger.WriteLine("Processing image...");
 
         var imageReader = new ImageReader(inputFilePath);
-        var outputNode = EdgeDetection(imageReader);
 
+        var statsNode = Stats(imageReader);
+        var outputNode = EdgeDetection(statsNode);
         var writer = new ImageWriter(outputFilePath);
+
         writer.ConnectInput(outputNode);
+
         var elapsedMilliseconds = writer.Write();
 
-        Console.WriteLine("Done! Image processed in " + elapsedMilliseconds + "ms.");
-        Console.WriteLine("Output image saved to " + outputFilePath + '\n');
+        logger.WriteLine("Done! Image processed in " + elapsedMilliseconds + "ms.");
+        logger.WriteLine("Output image saved to " + outputFilePath + '\n');
     }
 
     private static FilterNode EdgeDetection(FilterNode.IReadable reader)
@@ -42,6 +48,15 @@ class Program
         mirrorFilterNode.ConnectInput(invertFilterNode);
 
         return mirrorFilterNode;
+    }
+
+    private static FilterNode Stats(FilterNode.IReadable reader)
+    {
+        var stats = new ImageStats(new FileLogger());
+        var filterNode = new FilterNode(stats);
+        filterNode.ConnectInput(reader);
+
+        return filterNode;
     }
 
     private static string GetInputFilePathFromArgs(string[] args)
