@@ -8,6 +8,17 @@ class Program
 
     public static void Main(string[] args)
     {
+        if (args.Length == 0 || args[0] != "perf")
+        {
+            ProcessFiles(args);
+            return;
+        }
+
+
+    }
+
+    private static void ProcessFiles(string[] args)
+    {
         string inputFilePath = GetInputFilePathFromArgs(args);
         string outputFilePath = GetOutputFilePathFromArgs(args);
 
@@ -16,8 +27,8 @@ class Program
 
         var imageReader = new ImageReader(inputFilePath);
 
-        var statsNode = Stats(imageReader);
-        var outputNode = EdgeDetection(statsNode);
+        var statsNode = FilterFactory.Stats(imageReader);
+        var outputNode = FilterFactory.EdgeDetection(statsNode);
         var writer = new ImageWriter(outputFilePath);
 
         writer.ConnectInput(outputNode);
@@ -26,37 +37,6 @@ class Program
 
         logger.WriteLine("Done! Image processed in " + elapsedMilliseconds + "ms.");
         logger.WriteLine("Output image saved to " + outputFilePath + '\n');
-    }
-
-    private static FilterNode EdgeDetection(FilterNode.IReadable reader)
-    {
-        var blackAndWhiteFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Black_And_White);
-        blackAndWhiteFilterNode.ConnectInput(reader);
-
-        var sobelFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Sobel);
-        sobelFilterNode.ConnectInput(blackAndWhiteFilterNode);
-
-        return sobelFilterNode;
-    }
-
-    private static FilterNode InvertMirror(FilterNode.IReadable reader)
-    {
-        var invertFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Invert);
-        invertFilterNode.ConnectInput(reader);
-
-        var mirrorFilterNode = FilterFactory.FilterNodeFrom(FilterFactory.Filter.Mirror);
-        mirrorFilterNode.ConnectInput(invertFilterNode);
-
-        return mirrorFilterNode;
-    }
-
-    private static FilterNode Stats(FilterNode.IReadable reader)
-    {
-        var stats = new ImageStats(new FileLogger());
-        var filterNode = new FilterNode(stats);
-        filterNode.ConnectInput(reader);
-
-        return filterNode;
     }
 
     private static string GetInputFilePathFromArgs(string[] args)

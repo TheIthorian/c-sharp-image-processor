@@ -43,4 +43,35 @@ public class FilterFactory
     {
         return new FilterNode(From(filter));
     }
+
+    public static FilterNode EdgeDetection(FilterNode.IReadable reader)
+    {
+        var blackAndWhiteFilterNode = FilterNodeFrom(Filter.Black_And_White);
+        blackAndWhiteFilterNode.ConnectInput(reader);
+
+        var sobelFilterNode = FilterNodeFrom(Filter.Sobel);
+        sobelFilterNode.ConnectInput(blackAndWhiteFilterNode);
+
+        return sobelFilterNode;
+    }
+
+    public static FilterNode InvertMirror(FilterNode.IReadable reader)
+    {
+        var invertFilterNode = FilterNodeFrom(Filter.Invert);
+        invertFilterNode.ConnectInput(reader);
+
+        var mirrorFilterNode = FilterNodeFrom(Filter.Mirror);
+        mirrorFilterNode.ConnectInput(invertFilterNode);
+
+        return mirrorFilterNode;
+    }
+
+    public static FilterNode Stats(FilterNode.IReadable reader)
+    {
+        var stats = new ImageStats(new FileLogger());
+        var filterNode = new FilterNode(stats);
+        filterNode.ConnectInput(reader);
+
+        return filterNode;
+    }
 }
