@@ -14,7 +14,13 @@ class Program
             return;
         }
 
+        RunPerformanceTests();
+    }
 
+    private static void RunPerformanceTests()
+    {
+        var tester = new PerformanceTester(logger);
+        tester.Test();
     }
 
     private static void ProcessFiles(string[] args)
