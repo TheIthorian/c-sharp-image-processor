@@ -9,6 +9,7 @@ class SobelFilter : IFilter
     {
         float CalculateHorizontalFactor(int x, int y);
         float CalculateVerticalFactor(int x, int y);
+        void Release();
     }
 
     public SobelFilter() { }
@@ -39,5 +40,7 @@ class SobelFilter : IFilter
                 buffer.SetPixel(x, y, newColor);
             }
         }
+
+        sobelCalculator.Release();
     }
 }
