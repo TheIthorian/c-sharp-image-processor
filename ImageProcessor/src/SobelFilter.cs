@@ -16,7 +16,8 @@ class SobelFilter : IFilter
 
     public void Process(Bitmap buffer)
     {
-        sobelCalculator = new SobelCalculator(buffer);
+        Bitmap copy = (Bitmap)buffer.Clone();
+        sobelCalculator = new SobelCalculator(copy);
 
         for (int x = 0; x < buffer.Width; x++)
         {
