@@ -1,6 +1,5 @@
 namespace ImageProcessorNS;
 
-
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public class FilterFactory
 {
