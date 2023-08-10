@@ -8,13 +8,8 @@ class Program
 
     public static void Main(string[] args)
     {
-        if (args.Length == 0 || args[0] != "perf")
-        {
-            ProcessFiles(args);
-            return;
-        }
-
-        RunPerformanceTests();
+        if (args.Length == 0 || args[0] != "perf") ProcessFiles(args);
+        else RunPerformanceTests();
     }
 
     private static void RunPerformanceTests()

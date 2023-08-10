@@ -1,7 +1,7 @@
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class PerformanceTester
 {
-    private static readonly string LARGE_IMAGE = "mountain.jpg";
+    private static readonly string LARGE_IMAGE = "camera.jpg";
 
     private ImageStats.ILogger logger;
     private string outputFilePath = "testResults.txt";
@@ -34,19 +34,14 @@ class PerformanceTester
     {
         logger.WriteLine("Starting performance tests...");
         logger.WriteLine("Using image: " + inputFilePath);
-
-        logger.WriteLine("\nTesting with lock");
-        SobelCalculator.UseBitmapLock = true;
-        TestEdgeDetection();
-
-        logger.WriteLine("\nTesting without lock");
-        SobelCalculator.UseBitmapLock = false;
         TestEdgeDetection();
     }
 
     public void TestEdgeDetection()
     {
-        logger.WriteLine("Testing edge detection...");
+        logger.WriteLine("\nTesting edge detection...");
+        logger.WriteLine("Testing with lock");
+
         var imageReader = new ImageReader(inputFilePath);
 
         var statsNode = ImageProcessorNS.FilterFactory.Stats(imageReader);
