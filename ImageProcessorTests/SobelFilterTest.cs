@@ -12,7 +12,7 @@ public class SobelFilterTest
     {
         var testImage = TestUtil.LoadStandardImage();
 
-        FilterFactory.From(FilterFactory.Filter.Black_And_White).Process(testImage);
+        FilterFactory.From(FilterFactory.Filter.Black_And_White).Process(testImage); // Make image black and white first which make sobel filter more visible
 
         var invertFilter = FilterFactory.From(FilterFactory.Filter.Sobel);
         invertFilter.Process(testImage);
