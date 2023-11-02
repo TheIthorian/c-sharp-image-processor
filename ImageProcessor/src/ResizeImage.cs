@@ -23,14 +23,14 @@ public class ResizeImage
 
     public Image Width(int width)
     {
-        var resolution = image.Size.Width / image.Size.Height;
-        return Resize(width, width / resolution);
+        double resolution = (double)image.Size.Width / (double)image.Size.Height;
+        return Resize(width, (int)(width / resolution));
     }
 
     public Image Height(int height)
     {
-        var resolution = image.Size.Width / image.Size.Height;
-        return Resize(height * resolution, height);
+        double resolution = (double)image.Size.Width / (double)image.Size.Height;
+        return Resize((int)(height * resolution), height);
     }
 
     private Image ResizeWithKnownWidthAndHeight(int width, int height)
