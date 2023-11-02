@@ -10,7 +10,8 @@ public class FilterFactory
         Sobel,
         Gray_Scale,
         Black_And_White,
-        Fourier
+        Fourier,
+        Blank
     }
 
     public static IFilter FromArray(Array filterArray)
@@ -28,6 +29,7 @@ public class FilterFactory
             Filter.Gray_Scale => new GrayscaleFilter(),
             Filter.Black_And_White => new BlackAndWhiteFilter(),
             Filter.Sobel => new SobelFilter(),
+            Filter.Blank => new BlankFilter(),
             _ => throw new Exception("Unsupported filter: " + filter.ToString()),
         };
     }
