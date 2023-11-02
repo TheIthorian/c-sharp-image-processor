@@ -1,9 +1,13 @@
 using System.Drawing;
+using System.Drawing.Imaging;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class SobelFilter : IFilter
 {
     private ISobelCalculator? sobelCalculator;
+    private Bitmap? buffer;
+    private BitmapData? bufferData;
+    private int chunkNo = 0;
 
     public interface ISobelCalculator
     {
@@ -16,32 +20,124 @@ class SobelFilter : IFilter
 
     public void Process(Bitmap buffer)
     {
-        Bitmap copy = (Bitmap)buffer.Clone();
-        sobelCalculator = new SobelCalculator(copy);
+        this.buffer = buffer;
+        bufferData = buffer.LockBits(
+            new Rectangle(0, 0, buffer.Width, buffer.Height),
+            ImageLockMode.ReadWrite,
+            PixelFormat.Format32bppArgb
+        );
 
-        for (int x = 0; x < buffer.Width; x++)
+        sobelCalculator = new SobelCalculator((Bitmap)buffer.Clone());
+
+        var chunks = DivideImage(2);
+        // Parallel.ForEach(chunks, ProcessChunk);
+
+        foreach (var chunk in chunks)
         {
-            for (int y = 0; y < buffer.Height; y++)
+            ProcessChunk(chunk);
+        }
+
+        Console.WriteLine($"Chunks: {chunks.Count}");
+
+        sobelCalculator.Release();
+        buffer.UnlockBits(bufferData);
+    }
+
+    private class Chunk
+    {
+        public int X;
+        public int Y;
+        public int Width;
+        public int Height;
+
+        public Chunk(int X, int Y, int Width, int Height)
+        {
+            Console.WriteLine($"Chunk: X={X}, Y={Y}, Width={Width}, Height={Height}");
+            this.X = X;
+            this.Y = Y;
+            this.Width = Width;
+            this.Height = Height;
+        }
+    }
+
+    private List<Chunk> DivideImage(int n)
+    {
+        int chunkWidth = buffer!.Width / n;
+        int chunkHeight = buffer.Height / n;
+        int remainderWidth = buffer.Width % n;
+        int remainderHeight = buffer.Height % n;
+
+        var chunks = new List<Chunk>();
+        for (int x = 0; x < buffer.Width; x += chunkWidth)
+        {
+            for (int y = 0; y < buffer.Height; y += chunkHeight)
             {
-                float verticalFactor = sobelCalculator.CalculateVerticalFactor(x, y) / 255;
-                float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
+                chunks.Add(new Chunk(x, y, chunkWidth, chunkHeight));
+            }
+        }
+
+        if (remainderWidth > 0 && remainderHeight > 0)
+        {
+            chunks.Add(new Chunk(buffer.Width - remainderWidth, buffer.Height - remainderHeight, remainderWidth, remainderHeight));
+        }
+
+        return chunks;
+    }
+
+    private void ProcessChunk(Chunk chunk)
+    {
+        int currentChunkNo = Interlocked.Increment(ref chunkNo);
+        // int currentChunkNo = chunkNo++;
+        Console.WriteLine($"\n{currentChunkNo} Chunk: X={chunk.X}, Y={chunk.Y}, Width={chunk.Width}, Height={chunk.Height}");
+
+        for (int x = 0; x < chunk.Width; x++)
+        {
+            for (int y = 0; y < chunk.Height; y++)
+            {
+                var pixelX = x + chunk.X;
+                var pixelY = y + chunk.Y;
+
+                float verticalFactor = sobelCalculator!.CalculateVerticalFactor(pixelX, pixelY) / 255;
+                float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(pixelX, pixelY) / 255;
 
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
                 // An alternative is to take the geometric mean, which increases the contract in edges:
                 // float sobelFactor = (float)Math.Sqrt(verticalFactor * verticalFactor + horizontalFactor * horizontalFactor);
 
-                var color = buffer.GetPixel(x, y);
-                var newColor = Color.FromArgb(
-                    color.A,
-                    Math.Min((int)(sobelFactor * color.R), 255),
-                    Math.Min((int)(sobelFactor * color.G), 255),
-                    Math.Min((int)(sobelFactor * color.B), 255)
-                );
+                // Get the address of the first line.
+                IntPtr ptr = bufferData.Scan0 + (pixelY * bufferData.Stride) + (pixelX * 4);
 
-                buffer.SetPixel(x, y, newColor);
+                // Declare an array to hold the bytes of the bitmap.
+                int bytes = Math.Abs(bufferData.Stride) * chunk.Height;
+                byte[] rgbValues = new byte[bytes];
+
+                // Copy the RGB values into the array.
+                System.Runtime.InteropServices.Marshal.Copy(ptr, rgbValues, 0, bytes);
+
+                // Set every third value to 255. A 24bpp bitmap will look red.  
+                // rgbValues[1] = (byte)Math.Min(sobelFactor * rgbValues[1], 255);
+                // rgbValues[2] = (byte)Math.Min(sobelFactor * rgbValues[2], 255);
+                // rgbValues[3] = (byte)Math.Min(sobelFactor * rgbValues[3], 255);
+
+                // Get the pixel index in the array, for the position x,y
+                var pixelIndex = (bufferData.Stride) + (pixelX * 4);
+                Console.WriteLine($"Pixel: {pixelX}, {pixelY}, Index: {pixelIndex}");
+                rgbValues[0 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[0 + pixelIndex], 255);
+                rgbValues[1 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[1 + pixelIndex], 255);
+                rgbValues[2 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[2 + pixelIndex], 255);
+
+                // Copy the RGB values back to the bitmap
+                System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
+
+                // var color = buffer.GetPixel(pixelX, pixelY);
+                // var newColor = Color.FromArgb(
+                //     color.A,
+                //     Math.Min((int)(sobelFactor * color.R), 255),
+                //     Math.Min((int)(sobelFactor * color.G), 255),
+                //     Math.Min((int)(sobelFactor * color.B), 255)
+                // );
             }
         }
 
-        sobelCalculator.Release();
     }
 }

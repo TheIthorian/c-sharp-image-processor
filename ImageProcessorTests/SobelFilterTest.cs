@@ -16,6 +16,7 @@ public class SobelFilterTest
 
         var invertFilter = FilterFactory.From(FilterFactory.Filter.Sobel);
         invertFilter.Process(testImage);
+        // TestUtil.SaveImage(testImage, "SobelFilterTest.TestHighlightsEdgesOfImage.Actual");
 
         TestUtil.AssertEqual(
             testImage,
