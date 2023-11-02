@@ -6,9 +6,18 @@ class Program
 {
     public static void Main(string[] args)
     {
-        Parser.Default.ParseArguments<CommandLineOptions>(args)
-            .WithParsed(RunOptions)
-            .WithNotParsed(HandleParseError);
+        try
+        {
+
+            Parser.Default.ParseArguments<CommandLineOptions>(args)
+                .WithParsed(RunOptions)
+                .WithNotParsed(HandleParseError);
+        }
+        catch (Exception error)
+        {
+            Console.WriteLine("Error!");
+            Console.WriteLine(error.Message);
+        }
     }
 
     private static void RunOptions(CommandLineOptions opts)
@@ -20,6 +29,8 @@ class Program
     private static void ResizeImage(CommandLineOptions opts)
     {
         if (opts.InputImage == null) throw new Exception("Please provide an input image using --inputImage");
+
+        Console.WriteLine("Resizing " + opts.InputImage);
 
         var inputReader = new ImageReader(opts.InputImage);
         var resizer = new ResizeImage(inputReader.Read());
