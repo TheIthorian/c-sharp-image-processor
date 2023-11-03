@@ -1,4 +1,4 @@
-using System.Drawing.Imaging;
+﻿using System.Drawing.Imaging;
 using CommandLine;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -34,14 +34,15 @@ class Program
     private static void RunNoInput()
     {
         var inputFile = "";
-        while (inputFile == "")
+        while (inputFile == "" || inputFile == null)
         {
             Console.WriteLine("Location of input file: ");
             inputFile = Console.ReadLine();
         }
 
         Console.WriteLine("\nLocation of output file (output.png): ");
-        var outputFile = Console.ReadLine();
+        var relativeOutputFile = Console.ReadLine() ?? "output.png";
+        var outputFile = Path.GetFullPath(relativeOutputFile == "" ? "output.png" : relativeOutputFile);
 
         Console.WriteLine("\nWidth in px (leave blank to keep aspect ratio): ");
         var width = Console.ReadLine() ?? "0";
@@ -56,7 +57,7 @@ class Program
         var resizer = new ResizeImage(inputReader.Read());
         var outputImage = resizer.Resize(intWidth, intHeight);
 
-        outputImage.Save(outputFile ?? "output.png", ImageFormat.Png);
+        outputImage.Save(outputFile, ImageFormat.Png);
     }
 
     private static void RunOptions(CommandLineOptions opts)
