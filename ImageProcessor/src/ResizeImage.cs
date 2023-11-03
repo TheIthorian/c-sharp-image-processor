@@ -15,10 +15,13 @@ public class ResizeImage
 
     public Image Resize(int? width, int? height)
     {
-        if (width == null && height == null) return image;
-        if (width != null && height != null) return ResizeWithKnownWidthAndHeight(width ?? 0, height ?? 0);
-        if (width != null) return Width(width ?? 0);
-        return Height(height ?? 0);
+        var intWidth = width ?? 0;
+        var intHeight = height ?? 0;
+
+        if (intWidth == 0 && intHeight == 0) return image;
+        if (intWidth != 0 && intHeight != 0) return ResizeWithKnownWidthAndHeight(intWidth, intHeight);
+        if (intWidth != 0) return Width(intWidth);
+        return Height(intHeight);
     }
 
     public Image Width(int width)

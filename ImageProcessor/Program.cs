@@ -6,6 +6,14 @@ class Program
 {
     public static void Main(string[] args)
     {
+        if (args.Length == 0)
+        {
+            RunNoInput();
+            Console.WriteLine("Please press any enter to finish...");
+            Console.ReadLine();
+            return;
+        }
+
         try
         {
 
@@ -17,7 +25,38 @@ class Program
         {
             Console.WriteLine("Error!");
             Console.WriteLine(error.Message);
+
+            Console.WriteLine("Please press any enter to finish...");
+            Console.ReadLine();
         }
+    }
+
+    private static void RunNoInput()
+    {
+        var inputFile = "";
+        while (inputFile == "")
+        {
+            Console.WriteLine("Location of input file: ");
+            inputFile = Console.ReadLine();
+        }
+
+        Console.WriteLine("\nLocation of output file (output.png): ");
+        var outputFile = Console.ReadLine();
+
+        Console.WriteLine("\nWidth in px (leave blank to keep aspect ratio): ");
+        var width = Console.ReadLine() ?? "0";
+        var intWidth = Int32.Parse(width == "" ? "0" : width);
+
+        Console.WriteLine("\nHeight in px (leave blank to keep aspect ratio): ");
+        var height = Console.ReadLine() ?? "0";
+        var intHeight = Int32.Parse(height == "" ? "0" : height);
+
+        Console.WriteLine("\nResizing " + inputFile);
+        var inputReader = new ImageReader(inputFile);
+        var resizer = new ResizeImage(inputReader.Read());
+        var outputImage = resizer.Resize(intWidth, intHeight);
+
+        outputImage.Save(outputFile ?? "output.png", ImageFormat.Png);
     }
 
     private static void RunOptions(CommandLineOptions opts)
