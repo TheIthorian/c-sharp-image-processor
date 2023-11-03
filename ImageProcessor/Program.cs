@@ -1,4 +1,4 @@
-﻿using System.Drawing.Imaging;
+using System.Drawing.Imaging;
 using CommandLine;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -26,7 +26,7 @@ class Program
             Console.WriteLine("Error!");
             Console.WriteLine(error.Message);
 
-            Console.WriteLine("Please press any enter to finish...");
+            Console.WriteLine("Please press enter to finish...");
             Console.ReadLine();
         }
     }
