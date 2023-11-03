@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class SobelFilter : IFilter
@@ -20,27 +21,29 @@ class SobelFilter : IFilter
 
     public void Process(Bitmap buffer)
     {
-        this.buffer = buffer;
-        bufferData = buffer.LockBits(
-            new Rectangle(0, 0, buffer.Width, buffer.Height),
-            ImageLockMode.ReadWrite,
-            PixelFormat.Format32bppArgb
-        );
+        // this.buffer = buffer;
+        // bufferData = buffer.LockBits(
+        //     new Rectangle(0, 0, buffer.Width, buffer.Height),
+        //     ImageLockMode.ReadWrite,
+        //     PixelFormat.Format32bppArgb
+        // );
 
         sobelCalculator = new SobelCalculator((Bitmap)buffer.Clone());
 
-        var chunks = DivideImage(2);
-        // Parallel.ForEach(chunks, ProcessChunk);
+        // var chunks = DivideImage(2);
+        // // Parallel.ForEach(chunks, ProcessChunk);
 
-        foreach (var chunk in chunks)
-        {
-            ProcessChunk(chunk);
-        }
+        // foreach (var chunk in chunks)
+        // {
+        //     ProcessChunk(chunk);
+        // }
 
-        Console.WriteLine($"Chunks: {chunks.Count}");
+        // Console.WriteLine($"Chunks: {chunks.Count}");
 
         sobelCalculator.Release();
-        buffer.UnlockBits(bufferData);
+        // buffer.UnlockBits(bufferData);
+
+        ApplySobelFilter(buffer);
     }
 
     private class Chunk
@@ -139,5 +142,77 @@ class SobelFilter : IFilter
             }
         }
 
+    }
+
+    static Bitmap ApplySobelFilter(Bitmap inputImage)
+    {
+        int width = inputImage.Width;
+        int height = inputImage.Height;
+
+        Bitmap outputImage = new Bitmap(width, height);
+
+        BitmapData inputImageData = inputImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+        BitmapData outputImageData = outputImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+
+        int bytesPerPixel = 4;
+        int stride = inputImageData.Stride;
+
+        byte[] inputBytes = new byte[width * height * bytesPerPixel];
+        byte[] outputBytes = new byte[width * height * bytesPerPixel];
+
+        Marshal.Copy(inputImageData.Scan0, inputBytes, 0, inputBytes.Length);
+
+        for (int y = 1; y < height - 1; y++)
+        {
+            for (int x = 1; x < width - 1; x++)
+            {
+                int gxRed = 0, gxGreen = 0, gxBlue = 0;
+                int gyRed = 0, gyGreen = 0, gyBlue = 0;
+
+                for (int j = -1; j <= 1; j++)
+                {
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        int offset = ((y + j) * stride) + ((x + i) * bytesPerPixel);
+
+                        int factorX = i == 0 ? 2 : 1;
+                        int factorY = j == 0 ? 2 : 1;
+
+                        gxRed += Math.Min(factorX * inputBytes[offset + 2], 255);
+                        gxGreen += Math.Min(factorX * inputBytes[offset + 1], 255);
+                        gxBlue += Math.Min(factorX * inputBytes[offset], 255);
+
+                        gyRed += Math.Min(factorY * inputBytes[offset + 2], 255);
+                        gyGreen += Math.Min(factorY * inputBytes[offset + 1], 255);
+                        gyBlue += Math.Min(factorY * inputBytes[offset], 255);
+                    }
+                }
+
+
+
+                int index = (y * stride) + (x * bytesPerPixel);
+
+                int magnitudeRed = (int)Math.Sqrt(gxRed * gxRed + gyRed * gyRed);
+                int magnitudeGreen = (int)Math.Sqrt(gxGreen * gxGreen + gyGreen * gyGreen);
+                int magnitudeBlue = (int)Math.Sqrt(gxBlue * gxBlue + gyBlue * gyBlue);
+
+                // Ensure the values are within the 0-255 range
+                magnitudeRed = Math.Max(0, Math.Min(255, magnitudeRed));
+                magnitudeGreen = Math.Max(0, Math.Min(255, magnitudeGreen));
+                magnitudeBlue = Math.Max(0, Math.Min(255, magnitudeBlue));
+
+                outputBytes[index + 3] = 255;                    // Alpha channel
+                outputBytes[index + 2] = (byte)magnitudeRed;     // Red channel
+                outputBytes[index + 1] = (byte)magnitudeGreen;   // Green channel
+                outputBytes[index] = (byte)magnitudeBlue;        // Blue channel
+            }
+        }
+
+        Marshal.Copy(outputBytes, 0, inputImageData.Scan0, outputBytes.Length);
+
+        inputImage.UnlockBits(inputImageData);
+        outputImage.UnlockBits(outputImageData);
+
+        return outputImage;
     }
 }
