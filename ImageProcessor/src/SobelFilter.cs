@@ -20,69 +20,57 @@ class SobelFilter : IFilter
     {
         this.buffer = buffer;
 
-        var chunks = DivideImage(1);
+        var chunks = DivideImage(3);
         Console.WriteLine($"Chunks: {chunks.Count}\n");
 
-        // Parallel.ForEach(chunks, ProcessChunk);
-        ApplySobelFilter(chunks[0]);
+        // Parallel.ForEach(chunks, ApplySobelFilter);
+        // ApplySobelFilter(chunks[0]);
         // ApplySobelFilter(chunks[1]);
         // ApplySobelFilter(chunks[2]);
         // ApplySobelFilter(chunks[3]);
 
-        // foreach (var chunk in chunks) ApplySobelFilter(chunk);
+        foreach (var chunk in chunks) ApplySobelFilter(chunk);
     }
 
     private class Chunk
     {
 
         private static int chunkNo = 0;
-
-        public readonly int id;
-        public int X;
-        public int Y;
+        public readonly int Id;
         public int Width;
         public int Height;
+        public int Y;
+        public int Start { get => Y * Width; }
+        public int Length { get => Width * Height; }
 
-        public Chunk(int X, int Y, int Width, int Height)
+        public Chunk(int y, int width, int height)
         {
-            id = Interlocked.Increment(ref chunkNo);
-            Console.WriteLine($"Chunk {id}: X={X}, Y={Y}, Width={Width}, Height={Height}");
-            this.X = X;
-            this.Y = Y;
-            this.Width = Width;
-            this.Height = Height;
+            Id = Interlocked.Increment(ref chunkNo);
+            Y = y;
+            Width = width;
+            Height = height;
+            Console.WriteLine($"Chunk {Id}: y={Y}; width={Width}; height={Height}; start={Start}; length={Length}");
         }
     }
 
     private List<Chunk> DivideImage(int n)
     {
-        int chunkWidth = buffer!.Width / n;
+        int bufferWidth = buffer!.Width;
         int chunkHeight = buffer.Height / n;
-        int remainderWidth = buffer.Width % n;
         int remainderHeight = buffer.Height % n;
 
-        Console.WriteLine($"buffer width={buffer.Width}; chunk width={chunkWidth}");
         Console.WriteLine($"buffer height={buffer.Height}; chunk height={chunkHeight}");
 
         var chunks = new List<Chunk>();
-        for (int x = 0; x < buffer.Width; x += chunkWidth)
+        for (int y = 0; y + chunkHeight < buffer.Height; y += chunkHeight)
         {
-            for (int y = 0; y < buffer.Height; y += chunkHeight)
-            {
-                chunks.Add(new Chunk(x, y, chunkWidth, chunkHeight));
-            }
-        }
-
-        if (remainderWidth > 0)
-        {
-            Console.WriteLine("Adding remainder width");
-            chunks.Add(new Chunk(buffer.Width - remainderWidth, 0, remainderWidth, buffer.Height)); // Full height remainder
+            chunks.Add(new Chunk(y, bufferWidth, chunkHeight));
         }
 
         if (remainderHeight > 0)
         {
             Console.WriteLine("Adding remainder height");
-            chunks.Add(new Chunk(0, buffer.Height - remainderHeight, buffer.Width - remainderWidth, remainderHeight));
+            chunks.Add(new Chunk(buffer.Height - remainderHeight, bufferWidth, remainderHeight));
         }
 
         return chunks;
@@ -93,9 +81,10 @@ class SobelFilter : IFilter
         int width = chunk.Width;
         int height = chunk.Height;
 
-        Console.WriteLine($"Locking chunk {chunk.id} ({chunk.X}:{chunk.X + chunk.Width}, {chunk.Y}:{chunk.Y + chunk.Height})");
+        Console.WriteLine($"Locking chunk {chunk.Id} from {chunk.Start} to {chunk.Length + chunk.Start} ({chunk.Length})");
 
-        BitmapData inputImageData = buffer!.LockBits(new Rectangle(chunk.X, chunk.Y, chunk.Width, chunk.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+        var rect = new Rectangle(0, chunk.Y, chunk.Width, chunk.Height);
+        BitmapData inputImageData = buffer!.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
         int bytesPerPixel = 4;
         int stride = buffer.Width * bytesPerPixel;
@@ -103,9 +92,8 @@ class SobelFilter : IFilter
         byte[] inputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel]; // inputImageData is only 1 chunk large
         byte[] outputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel];
 
-
         // Copy input image to inputBytes
-        Marshal.Copy(inputImageData.Scan0, inputBytes, 0, inputBytes.Length);
+        Marshal.Copy(inputImageData.Scan0, inputBytes, 0, chunk.Length * bytesPerPixel);
 
         Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}; width={width}; height={height}");
 
@@ -115,20 +103,13 @@ class SobelFilter : IFilter
         {
             for (int x = 0; x < chunk.Width; x++)
             {
-                int index = (y * stride / 2) + (x * bytesPerPixel);
-
-
-                // Not working because if mismatched array sizes
-                if (y < chunk.Y || y > chunk.Height + chunk.Y || x < chunk.X || x > chunk.X + chunk.Width)
-                {
-                    continue;
-                }
+                int index = (y * stride) + (x * bytesPerPixel);
 
                 float verticalFactor = sobelCalculator!.CalculateVerticalFactor(x, y) / 255;
                 float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
 
-                Console.WriteLine($"x={x}; y={y}; index={index}");
+                // Console.WriteLine($"x={x}; y={y}; index={index}");
                 int magnitudeRed = Math.Min((int)(inputBytes[index + 2] * sobelFactor), 255);
 
                 outputBytes[index + 3] = 255;                // Alpha channel
@@ -139,9 +120,9 @@ class SobelFilter : IFilter
         }
 
         // Copy outputBytes to image
-        Marshal.Copy(outputBytes, 0, inputImageData.Scan0, outputBytes.Length);
+        Marshal.Copy(outputBytes, 0, inputImageData.Scan0, chunk.Length * bytesPerPixel);
 
-        Console.WriteLine($"Done writing chunk {chunk.id}\n");
+        Console.WriteLine($"Done writing chunk {chunk.Id}\n");
 
         buffer.UnlockBits(inputImageData);
     }

@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
@@ -28,6 +27,4 @@ public class SobelCalculator : BaseSobelCalculator
         // var redChanel = imageBytes[(y * stride) + (x * 4)] >> 16;
         return redChanel & 0xFF; // Mask out alpha channel
     }
-
-
 }
