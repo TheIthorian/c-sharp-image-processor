@@ -77,9 +77,6 @@ class SobelFilter : IFilter
 
     private void ApplySobelFilter(Chunk chunk, BitmapData inputImageData)
     {
-        int width = chunk.Width;
-        int height = chunk.Height;
-
         Console.WriteLine($"Processing chunk {chunk.Id} from {chunk.Start} to {chunk.Length + chunk.Start} ({chunk.Length})");
 
         int bytesPerPixel = 4;
@@ -88,21 +85,13 @@ class SobelFilter : IFilter
         byte[] inputBytes = new byte[chunk.Length * bytesPerPixel]; // inputImageData is only 1 chunk large
         byte[] outputBytes = new byte[chunk.Length * bytesPerPixel];
 
-
-        Bitmap outputImage = new Bitmap(width, height);
-        BitmapData outputImageData = outputImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-
         // Copy input image to inputBytes
         Marshal.Copy(inputImageData.Scan0 + (chunk.Start * bytesPerPixel), inputBytes, 0, chunk.Length * bytesPerPixel);
-
-        Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}; width={width}; height={height}");
 
         var sobelCalculator = new SobelCalculator(inputImageData);
 
         for (int y = 0; y < chunk.Height; y++)
         {
-            // Console.WriteLine($"x={y}");
             for (int x = 0; x < chunk.Width; x++)
             {
                 int index = (y * stride) + (x * bytesPerPixel);
@@ -119,12 +108,6 @@ class SobelFilter : IFilter
                 outputBytes[index] = (byte)magnitudeRed;     // Blue channel
             }
         }
-
-
-
-        // Marshal.Copy(outputBytes, 0, outputImageData.Scan0, outputBytes.Length);
-        // outputImage.UnlockBits(outputImageData);
-        // outputImage.Save("C:/Programming/Misc_Sites/c-sharp-image-processor/ImageProcessor/src/testImage.png", ImageFormat.Png);
 
         // Copy outputBytes to image
         Marshal.Copy(outputBytes, 0, inputImageData.Scan0 + (chunk.Start * bytesPerPixel), chunk.Length * bytesPerPixel);
