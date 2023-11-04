@@ -1,5 +1,3 @@
-using System.Drawing;
-
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public abstract class BaseSobelCalculator : SobelFilter.ISobelCalculator
 {
