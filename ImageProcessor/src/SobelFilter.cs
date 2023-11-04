@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -19,14 +20,21 @@ class SobelFilter : IFilter
     public void Process(Bitmap buffer)
     {
         this.buffer = buffer;
+        int numberOfChunks = 32;
 
-        var chunks = DivideImage(2);
-        Console.WriteLine($"Chunks: {chunks.Count}\n");
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+
+        var chunks = DivideImage(numberOfChunks);
 
         var rect = new Rectangle(0, 0, buffer.Width, buffer.Height);
         BitmapData inputImageData = buffer.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
         Parallel.ForEach(chunks, (chunk) => ApplySobelFilter(chunk, inputImageData));
+
+        watch.Stop();
+        Console.WriteLine($"Completed in {watch.Elapsed.TotalMilliseconds} using {numberOfChunks} chunks\n");
+        Console.WriteLine($"{numberOfChunks}\t{watch.Elapsed.TotalMilliseconds}");
 
         buffer.UnlockBits(inputImageData);
     }
@@ -77,8 +85,6 @@ class SobelFilter : IFilter
 
     private void ApplySobelFilter(Chunk chunk, BitmapData inputImageData)
     {
-        Console.WriteLine($"Processing chunk {chunk.Id} from {chunk.Start} to {chunk.Length + chunk.Start} ({chunk.Length})");
-
         int bytesPerPixel = 4;
         int stride = buffer!.Width * bytesPerPixel;
 
@@ -111,7 +117,5 @@ class SobelFilter : IFilter
 
         // Copy outputBytes to image
         Marshal.Copy(outputBytes, 0, inputImageData.Scan0 + (chunk.Start * bytesPerPixel), chunk.Length * bytesPerPixel);
-
-        Console.WriteLine($"Done writing chunk {chunk.Id}\n");
     }
 }
