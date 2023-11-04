@@ -8,7 +8,6 @@ class SobelFilter : IFilter
     private ISobelCalculator? sobelCalculator;
     private Bitmap? buffer;
     private BitmapData? bufferData;
-    private int chunkNo = 0;
 
     public interface ISobelCalculator
     {
@@ -21,24 +20,29 @@ class SobelFilter : IFilter
 
     public void Process(Bitmap buffer)
     {
+        this.buffer = buffer;
         sobelCalculator = new SobelCalculator((Bitmap)buffer.Clone());
 
-        // var chunks = DivideImage(2);
+        var chunks = DivideImage(1);
+        Console.WriteLine($"Chunks: {chunks.Count}\n");
+
         // Parallel.ForEach(chunks, ProcessChunk);
 
-        // foreach (var chunk in chunks)
-        // {
-        //     // ProcessChunk(chunk);
-        // }
+        foreach (var chunk in chunks)
+        {
+            ApplySobelFilter(chunk);
+        }
 
-        // Console.WriteLine($"Chunks: {chunks.Count}");
 
         sobelCalculator.Release();
-        ApplySobelFilter(buffer);
     }
 
     private class Chunk
     {
+
+        private static int chunkNo = 0;
+
+        public readonly int id;
         public int X;
         public int Y;
         public int Width;
@@ -46,7 +50,8 @@ class SobelFilter : IFilter
 
         public Chunk(int X, int Y, int Width, int Height)
         {
-            Console.WriteLine($"Chunk: X={X}, Y={Y}, Width={Width}, Height={Height}");
+            id = Interlocked.Increment(ref chunkNo);
+            Console.WriteLine($"Chunk {id}: X={X}, Y={Y}, Width={Width}, Height={Height}");
             this.X = X;
             this.Y = Y;
             this.Width = Width;
@@ -61,6 +66,9 @@ class SobelFilter : IFilter
         int remainderWidth = buffer.Width % n;
         int remainderHeight = buffer.Height % n;
 
+        Console.WriteLine($"buffer width={buffer.Width}; chunk width={chunkWidth}");
+        Console.WriteLine($"buffer height={buffer.Height}; chunk height={chunkHeight}");
+
         var chunks = new List<Chunk>();
         for (int x = 0; x < buffer.Width; x += chunkWidth)
         {
@@ -72,6 +80,7 @@ class SobelFilter : IFilter
 
         if (remainderWidth > 0 && remainderHeight > 0)
         {
+            Console.WriteLine("Adding remainder");
             chunks.Add(new Chunk(buffer.Width - remainderWidth, buffer.Height - remainderHeight, remainderWidth, remainderHeight));
         }
 
@@ -80,8 +89,7 @@ class SobelFilter : IFilter
 
     private void ProcessChunk(Chunk chunk)
     {
-        int currentChunkNo = Interlocked.Increment(ref chunkNo);
-        // int currentChunkNo = chunkNo++;
+        int currentChunkNo = 1;
         Console.WriteLine($"\n{currentChunkNo} Chunk: X={chunk.X}, Y={chunk.Y}, Width={chunk.Width}, Height={chunk.Height}");
 
         for (int x = 0; x < chunk.Width; x++)
@@ -135,30 +143,35 @@ class SobelFilter : IFilter
 
     }
 
-    private void ApplySobelFilter(Bitmap inputImage)
+    private void ApplySobelFilter(Chunk chunk)
     {
-        int width = inputImage.Width;
-        int height = inputImage.Height;
+        int width = chunk.Width;
+        int height = chunk.Height;
 
-        BitmapData inputImageData = inputImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+        Console.WriteLine($"Locking chunk {chunk.id} ({chunk.X}-{chunk.X + chunk.Width}, {chunk.Y}-{chunk.Y + chunk.Height})");
+
+        BitmapData inputImageData = buffer!.LockBits(new Rectangle(chunk.X, chunk.Y, chunk.Width, chunk.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
         int bytesPerPixel = 4;
-        int stride = inputImageData.Stride;
+        int stride = chunk.Width * bytesPerPixel;
 
         byte[] inputBytes = new byte[width * height * bytesPerPixel];
         byte[] outputBytes = new byte[width * height * bytesPerPixel];
 
         Marshal.Copy(inputImageData.Scan0, inputBytes, 0, inputBytes.Length);
 
-        for (int y = 1; y < height - 1; y++)
+        Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}");
+
+        for (int y = 0; y < height; y++)
         {
-            for (int x = 1; x < width - 1; x++)
+            for (int x = 0; x < width; x++)
             {
                 float verticalFactor = sobelCalculator!.CalculateVerticalFactor(x, y) / 255;
                 float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
-
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
+
                 int index = (y * stride) + (x * bytesPerPixel);
+                // Console.WriteLine($"x={x}; y={y}; index={index}");
                 int magnitudeRed = Math.Min((int)(inputBytes[index + 2] * sobelFactor), 255);
 
                 outputBytes[index + 3] = 255;                // Alpha channel
@@ -170,6 +183,8 @@ class SobelFilter : IFilter
 
         Marshal.Copy(outputBytes, 0, inputImageData.Scan0, outputBytes.Length);
 
-        inputImage.UnlockBits(inputImageData);
+        Console.WriteLine($"Done writing chunk {chunk.id}\n");
+
+        buffer.UnlockBits(inputImageData);
     }
 }
