@@ -14,9 +14,8 @@ public class SobelFilterTest
 
         FilterFactory.From(FilterFactory.Filter.Black_And_White).Process(testImage); // Make image black and white first which make sobel filter more visible
 
-        var invertFilter = FilterFactory.From(FilterFactory.Filter.Sobel);
+        var invertFilter = new SobelFilter().SetParallel(1);
         invertFilter.Process(testImage);
-        // TestUtil.SaveImage(testImage, "SobelFilterTest.TestHighlightsEdgesOfImage.Actual");
 
         TestUtil.AssertEqual(
             testImage,
