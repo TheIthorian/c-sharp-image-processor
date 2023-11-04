@@ -62,7 +62,7 @@ class SobelFilter : IFilter
         Console.WriteLine($"buffer height={buffer.Height}; chunk height={chunkHeight}");
 
         var chunks = new List<Chunk>();
-        for (int y = 0; y + chunkHeight < buffer.Height; y += chunkHeight)
+        for (int y = 0; y + chunkHeight <= buffer.Height; y += chunkHeight)
         {
             chunks.Add(new Chunk(y, bufferWidth, chunkHeight));
         }
