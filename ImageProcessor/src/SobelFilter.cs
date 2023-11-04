@@ -5,9 +5,7 @@ using System.Runtime.InteropServices;
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 class SobelFilter : IFilter
 {
-    private ISobelCalculator? sobelCalculator;
     private Bitmap? buffer;
-    private BitmapData? bufferData;
 
     public interface ISobelCalculator
     {
@@ -21,20 +19,17 @@ class SobelFilter : IFilter
     public void Process(Bitmap buffer)
     {
         this.buffer = buffer;
-        sobelCalculator = new SobelCalculator((Bitmap)buffer.Clone());
 
         var chunks = DivideImage(1);
         Console.WriteLine($"Chunks: {chunks.Count}\n");
 
         // Parallel.ForEach(chunks, ProcessChunk);
+        ApplySobelFilter(chunks[0]);
+        // ApplySobelFilter(chunks[1]);
+        // ApplySobelFilter(chunks[2]);
+        // ApplySobelFilter(chunks[3]);
 
-        foreach (var chunk in chunks)
-        {
-            ApplySobelFilter(chunk);
-        }
-
-
-        sobelCalculator.Release();
+        // foreach (var chunk in chunks) ApplySobelFilter(chunk);
     }
 
     private class Chunk
@@ -78,69 +73,19 @@ class SobelFilter : IFilter
             }
         }
 
-        if (remainderWidth > 0 && remainderHeight > 0)
+        if (remainderWidth > 0)
         {
-            Console.WriteLine("Adding remainder");
-            chunks.Add(new Chunk(buffer.Width - remainderWidth, buffer.Height - remainderHeight, remainderWidth, remainderHeight));
+            Console.WriteLine("Adding remainder width");
+            chunks.Add(new Chunk(buffer.Width - remainderWidth, 0, remainderWidth, buffer.Height)); // Full height remainder
+        }
+
+        if (remainderHeight > 0)
+        {
+            Console.WriteLine("Adding remainder height");
+            chunks.Add(new Chunk(0, buffer.Height - remainderHeight, buffer.Width - remainderWidth, remainderHeight));
         }
 
         return chunks;
-    }
-
-    private void ProcessChunk(Chunk chunk)
-    {
-        int currentChunkNo = 1;
-        Console.WriteLine($"\n{currentChunkNo} Chunk: X={chunk.X}, Y={chunk.Y}, Width={chunk.Width}, Height={chunk.Height}");
-
-        for (int x = 0; x < chunk.Width; x++)
-        {
-            for (int y = 0; y < chunk.Height; y++)
-            {
-                var pixelX = x + chunk.X;
-                var pixelY = y + chunk.Y;
-
-                float verticalFactor = sobelCalculator!.CalculateVerticalFactor(pixelX, pixelY) / 255;
-                float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(pixelX, pixelY) / 255;
-
-                float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
-                // An alternative is to take the geometric mean, which increases the contract in edges:
-                // float sobelFactor = (float)Math.Sqrt(verticalFactor * verticalFactor + horizontalFactor * horizontalFactor);
-
-                // Get the address of the first line.
-                IntPtr ptr = bufferData.Scan0 + (pixelY * bufferData.Stride) + (pixelX * 4);
-
-                // Declare an array to hold the bytes of the bitmap.
-                int bytes = Math.Abs(bufferData.Stride) * chunk.Height;
-                byte[] rgbValues = new byte[bytes];
-
-                // Copy the RGB values into the array.
-                System.Runtime.InteropServices.Marshal.Copy(ptr, rgbValues, 0, bytes);
-
-                // Set every third value to 255. A 24bpp bitmap will look red.  
-                // rgbValues[1] = (byte)Math.Min(sobelFactor * rgbValues[1], 255);
-                // rgbValues[2] = (byte)Math.Min(sobelFactor * rgbValues[2], 255);
-                // rgbValues[3] = (byte)Math.Min(sobelFactor * rgbValues[3], 255);
-
-                // Get the pixel index in the array, for the position x,y
-                var pixelIndex = (bufferData.Stride) + (pixelX * 4);
-                Console.WriteLine($"Pixel: {pixelX}, {pixelY}, Index: {pixelIndex}");
-                rgbValues[0 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[0 + pixelIndex], 255);
-                rgbValues[1 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[1 + pixelIndex], 255);
-                rgbValues[2 + pixelIndex] = (byte)Math.Min(sobelFactor * rgbValues[2 + pixelIndex], 255);
-
-                // Copy the RGB values back to the bitmap
-                System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
-
-                // var color = buffer.GetPixel(pixelX, pixelY);
-                // var newColor = Color.FromArgb(
-                //     color.A,
-                //     Math.Min((int)(sobelFactor * color.R), 255),
-                //     Math.Min((int)(sobelFactor * color.G), 255),
-                //     Math.Min((int)(sobelFactor * color.B), 255)
-                // );
-            }
-        }
-
     }
 
     private void ApplySobelFilter(Chunk chunk)
@@ -148,30 +93,42 @@ class SobelFilter : IFilter
         int width = chunk.Width;
         int height = chunk.Height;
 
-        Console.WriteLine($"Locking chunk {chunk.id} ({chunk.X}-{chunk.X + chunk.Width}, {chunk.Y}-{chunk.Y + chunk.Height})");
+        Console.WriteLine($"Locking chunk {chunk.id} ({chunk.X}:{chunk.X + chunk.Width}, {chunk.Y}:{chunk.Y + chunk.Height})");
 
         BitmapData inputImageData = buffer!.LockBits(new Rectangle(chunk.X, chunk.Y, chunk.Width, chunk.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
         int bytesPerPixel = 4;
-        int stride = chunk.Width * bytesPerPixel;
+        int stride = buffer.Width * bytesPerPixel;
 
-        byte[] inputBytes = new byte[width * height * bytesPerPixel];
-        byte[] outputBytes = new byte[width * height * bytesPerPixel];
+        byte[] inputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel]; // inputImageData is only 1 chunk large
+        byte[] outputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel];
 
+
+        // Copy input image to inputBytes
         Marshal.Copy(inputImageData.Scan0, inputBytes, 0, inputBytes.Length);
 
-        Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}");
+        Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}; width={width}; height={height}");
 
-        for (int y = 0; y < height; y++)
+        var sobelCalculator = new SobelCalculator(inputImageData);
+
+        for (int y = 0; y < chunk.Height; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < chunk.Width; x++)
             {
+                int index = (y * stride / 2) + (x * bytesPerPixel);
+
+
+                // Not working because if mismatched array sizes
+                if (y < chunk.Y || y > chunk.Height + chunk.Y || x < chunk.X || x > chunk.X + chunk.Width)
+                {
+                    continue;
+                }
+
                 float verticalFactor = sobelCalculator!.CalculateVerticalFactor(x, y) / 255;
                 float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
 
-                int index = (y * stride) + (x * bytesPerPixel);
-                // Console.WriteLine($"x={x}; y={y}; index={index}");
+                Console.WriteLine($"x={x}; y={y}; index={index}");
                 int magnitudeRed = Math.Min((int)(inputBytes[index + 2] * sobelFactor), 255);
 
                 outputBytes[index + 3] = 255;                // Alpha channel
@@ -181,6 +138,7 @@ class SobelFilter : IFilter
             }
         }
 
+        // Copy outputBytes to image
         Marshal.Copy(outputBytes, 0, inputImageData.Scan0, outputBytes.Length);
 
         Console.WriteLine($"Done writing chunk {chunk.id}\n");

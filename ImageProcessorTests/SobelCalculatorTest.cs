@@ -31,7 +31,7 @@ public class SobelCalculatorTest
     public void CalculatesTheCorrectFactorForFirstElement()
     {
         var bitmap = CreateBitmap();
-        var sobelCalculator = new SobelCalculator(bitmap);
+        var sobelCalculator = new SobelCalculatorWithoutLock(bitmap);
 
         var factor = sobelCalculator.CalculateVerticalFactor(0, 0);
 
@@ -47,7 +47,7 @@ public class SobelCalculatorTest
     public void CalculatesTheCorrectFactorForLastElement()
     {
         var bitmap = CreateBitmap();
-        var sobelCalculator = new SobelCalculator(bitmap);
+        var sobelCalculator = new SobelCalculatorWithoutLock(bitmap);
 
         var factor = sobelCalculator.CalculateVerticalFactor(1, 1);
 

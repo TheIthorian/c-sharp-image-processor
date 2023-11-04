@@ -3,7 +3,11 @@ using System.Drawing;
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 public class SobelCalculatorWithoutLock : BaseSobelCalculator
 {
-    public SobelCalculatorWithoutLock(Bitmap buffer) : base(buffer) { }
+    private Bitmap buffer;
+    public SobelCalculatorWithoutLock(Bitmap buffer) : base(buffer.Width, buffer.Height)
+    {
+        this.buffer = buffer;
+    }
 
     protected override float CalculateFactor(int x, int y)
     {

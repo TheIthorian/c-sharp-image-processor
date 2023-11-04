@@ -24,16 +24,13 @@ public abstract class BaseSobelCalculator : SobelFilter.ISobelCalculator
     protected int[] horizontalConvolutionMatrix = DEFAULT_HORIZONTAL_CONVOLUTION_MATRIX;
     protected int[] verticalConvolutionMatrix = DEFAULT_VERTICAL_CONVOLUTION_MATRIX;
 
-    protected readonly Bitmap buffer;
+    protected readonly int width;
+    protected readonly int height;
 
-    protected BaseSobelCalculator(Bitmap buffer)
+    protected BaseSobelCalculator(int width, int height)
     {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
-        this.buffer = new Bitmap(buffer);
+        this.width = width;
+        this.height = height;
     }
 
     public void Release()
@@ -71,8 +68,8 @@ public abstract class BaseSobelCalculator : SobelFilter.ISobelCalculator
             var adjacentX = ADJACENT_DIRECTIONS[i, 0] + x;
             var adjacentY = ADJACENT_DIRECTIONS[i, 1] + y;
 
-            adjacentX = Math.Max(0, Math.Min(buffer.Width - 1, adjacentX));
-            adjacentY = Math.Max(0, Math.Min(buffer.Height - 1, adjacentY));
+            adjacentX = Math.Max(0, Math.Min(width - 1, adjacentX));
+            adjacentY = Math.Max(0, Math.Min(height - 1, adjacentY));
 
             // TODO: Find the edge for each color channel
             factor += matrixFactor * CalculateFactor(adjacentX, adjacentY);
