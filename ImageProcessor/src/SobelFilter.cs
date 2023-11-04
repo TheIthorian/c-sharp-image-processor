@@ -20,16 +20,20 @@ class SobelFilter : IFilter
     {
         this.buffer = buffer;
 
-        var chunks = DivideImage(3);
+        var chunks = DivideImage(4);
         Console.WriteLine($"Chunks: {chunks.Count}\n");
 
-        // Parallel.ForEach(chunks, ApplySobelFilter);
-        // ApplySobelFilter(chunks[0]);
-        // ApplySobelFilter(chunks[1]);
-        // ApplySobelFilter(chunks[2]);
-        // ApplySobelFilter(chunks[3]);
+        var rect = new Rectangle(0, 0, buffer.Width, buffer.Height);
+        BitmapData inputImageData = buffer.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-        foreach (var chunk in chunks) ApplySobelFilter(chunk);
+        // Parallel.ForEach(chunks, (chunk) => ApplySobelFilter(chunk, inputImageData));
+        // ApplySobelFilter(chunks[0], inputImageData);
+        // ApplySobelFilter(chunks[1], inputImageData);
+        // ApplySobelFilter(chunks[2], inputImageData);
+        // ApplySobelFilter(chunks[3], inputImageData);
+
+        foreach (var chunk in chunks) ApplySobelFilter(chunk, inputImageData);
+        buffer.UnlockBits(inputImageData);
     }
 
     private class Chunk
@@ -76,24 +80,26 @@ class SobelFilter : IFilter
         return chunks;
     }
 
-    private void ApplySobelFilter(Chunk chunk)
+    private void ApplySobelFilter(Chunk chunk, BitmapData inputImageData)
     {
         int width = chunk.Width;
         int height = chunk.Height;
 
-        Console.WriteLine($"Locking chunk {chunk.Id} from {chunk.Start} to {chunk.Length + chunk.Start} ({chunk.Length})");
-
-        var rect = new Rectangle(0, chunk.Y, chunk.Width, chunk.Height);
-        BitmapData inputImageData = buffer!.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+        Console.WriteLine($"Processing chunk {chunk.Id} from {chunk.Start} to {chunk.Length + chunk.Start} ({chunk.Length})");
 
         int bytesPerPixel = 4;
-        int stride = buffer.Width * bytesPerPixel;
+        int stride = buffer!.Width * bytesPerPixel;
 
-        byte[] inputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel]; // inputImageData is only 1 chunk large
-        byte[] outputBytes = new byte[chunk.Width * chunk.Height * bytesPerPixel];
+        byte[] inputBytes = new byte[chunk.Length * bytesPerPixel]; // inputImageData is only 1 chunk large
+        byte[] outputBytes = new byte[chunk.Length * bytesPerPixel];
+
+
+        Bitmap outputImage = new Bitmap(width, height);
+        BitmapData outputImageData = outputImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+
 
         // Copy input image to inputBytes
-        Marshal.Copy(inputImageData.Scan0, inputBytes, 0, chunk.Length * bytesPerPixel);
+        Marshal.Copy(inputImageData.Scan0 + (chunk.Start * bytesPerPixel), inputBytes, 0, chunk.Length * bytesPerPixel);
 
         Console.WriteLine($"inputBytes length={inputBytes.Length}; stride={stride}; width={width}; height={height}");
 
@@ -101,15 +107,15 @@ class SobelFilter : IFilter
 
         for (int y = 0; y < chunk.Height; y++)
         {
+            // Console.WriteLine($"x={y}");
             for (int x = 0; x < chunk.Width; x++)
             {
                 int index = (y * stride) + (x * bytesPerPixel);
 
-                float verticalFactor = sobelCalculator!.CalculateVerticalFactor(x, y) / 255;
-                float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y) / 255;
+                float verticalFactor = sobelCalculator!.CalculateVerticalFactor(x, y + chunk.Y) / 255;
+                float horizontalFactor = sobelCalculator.CalculateHorizontalFactor(x, y + chunk.Y) / 255;
                 float sobelFactor = (Math.Abs(verticalFactor) + Math.Abs(horizontalFactor)) / 2;
 
-                // Console.WriteLine($"x={x}; y={y}; index={index}");
                 int magnitudeRed = Math.Min((int)(inputBytes[index + 2] * sobelFactor), 255);
 
                 outputBytes[index + 3] = 255;                // Alpha channel
@@ -119,11 +125,15 @@ class SobelFilter : IFilter
             }
         }
 
+
+
+        // Marshal.Copy(outputBytes, 0, outputImageData.Scan0, outputBytes.Length);
+        // outputImage.UnlockBits(outputImageData);
+        // outputImage.Save("C:/Programming/Misc_Sites/c-sharp-image-processor/ImageProcessor/src/testImage.png", ImageFormat.Png);
+
         // Copy outputBytes to image
-        Marshal.Copy(outputBytes, 0, inputImageData.Scan0, chunk.Length * bytesPerPixel);
+        Marshal.Copy(outputBytes, 0, inputImageData.Scan0 + (chunk.Start * bytesPerPixel), chunk.Length * bytesPerPixel);
 
         Console.WriteLine($"Done writing chunk {chunk.Id}\n");
-
-        buffer.UnlockBits(inputImageData);
     }
 }
