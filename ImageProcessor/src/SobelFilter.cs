@@ -4,9 +4,10 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
-class SobelFilter : IFilter
+public class SobelFilter : IFilter
 {
     private Bitmap? buffer;
+    private int numberOfChunks = Environment.ProcessorCount;
 
     public interface ISobelCalculator
     {
@@ -17,10 +18,15 @@ class SobelFilter : IFilter
 
     public SobelFilter() { }
 
+    public SobelFilter SetParallel(int n)
+    {
+        numberOfChunks = n;
+        return this;
+    }
+
     public void Process(Bitmap buffer)
     {
         this.buffer = buffer;
-        int numberOfChunks = 32;
 
         Stopwatch watch = new Stopwatch();
         watch.Start();
