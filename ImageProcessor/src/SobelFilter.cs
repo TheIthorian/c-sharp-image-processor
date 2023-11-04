@@ -20,19 +20,14 @@ class SobelFilter : IFilter
     {
         this.buffer = buffer;
 
-        var chunks = DivideImage(4);
+        var chunks = DivideImage(2);
         Console.WriteLine($"Chunks: {chunks.Count}\n");
 
         var rect = new Rectangle(0, 0, buffer.Width, buffer.Height);
         BitmapData inputImageData = buffer.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-        // Parallel.ForEach(chunks, (chunk) => ApplySobelFilter(chunk, inputImageData));
-        // ApplySobelFilter(chunks[0], inputImageData);
-        // ApplySobelFilter(chunks[1], inputImageData);
-        // ApplySobelFilter(chunks[2], inputImageData);
-        // ApplySobelFilter(chunks[3], inputImageData);
+        Parallel.ForEach(chunks, (chunk) => ApplySobelFilter(chunk, inputImageData));
 
-        foreach (var chunk in chunks) ApplySobelFilter(chunk, inputImageData);
         buffer.UnlockBits(inputImageData);
     }
 
